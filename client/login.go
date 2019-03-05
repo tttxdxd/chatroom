@@ -46,7 +46,16 @@ func login(username uint32, password string) (err error) {
 		fmt.Println(" message.ReadMsg(conn) error:", err)
 		return
 	}
-	fmt.Println(res)
+
+	switch res.Code {
+	case message.CodeLoginSuccess:
+		fmt.Println("登陆成功")
+	case message.CodeLoginPwdError:
+		fmt.Println(res.Error)
+	case message.CodeLoginUserNotFound:
+		fmt.Println(res.Error)
+	default:
+	}
 
 	time.Sleep(3 * time.Second)
 
