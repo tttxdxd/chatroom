@@ -23,6 +23,7 @@ func ReadMsg(conn net.Conn) (msg Msg, err error) {
 	n, err := conn.Read(data[:4])
 	if n != 4 || err != nil {
 		fmt.Println("conn.Read(data[:4]) error:", err)
+		err = ERROR_LEN_OF_READ
 		return
 	}
 	msgLen := binary.BigEndian.Uint32(data[:4])
@@ -31,6 +32,7 @@ func ReadMsg(conn net.Conn) (msg Msg, err error) {
 	n, err = conn.Read(data[:msgLen])
 	if uint32(n) != msgLen || err != nil {
 		fmt.Println("conn.Read(data[:msgLen]) error:", err)
+		err = ERROR_LEN_OF_READ
 		return
 	}
 
@@ -44,13 +46,16 @@ func ReadMsg(conn net.Conn) (msg Msg, err error) {
 }
 
 func WriteMsg(conn net.Conn, msg Msg) (err error) {
-	data, err = json.Marshal(msg)
+	msgData, err := json.Marshal(msg) //ERROR 这里改变了data切片!!! 已改正
 	if err != nil {
 		fmt.Println("Marshal(msg) error:", err)
 		return
 	}
-	msglen := uint32(len(data))
+
+	msglen := uint32(len(msgData))
 	binary.BigEndian.PutUint32(length, msglen)
+
+	copy(data[:msglen], msgData)
 
 	n, err := conn.Write(length)
 	if n != 4 || err != nil {
@@ -93,13 +98,15 @@ func ReadResponse(conn net.Conn) (msg Response, err error) {
 }
 
 func WriteResponse(conn net.Conn, msg Response) (err error) {
-	data, err = Serializer(msg)
+	resData, err := Serializer(msg) //ERROR 同上
 	if err != nil {
 		fmt.Println("Serializer(msg) error:", err)
 		return
 	}
-	msglen := uint32(len(data))
+	msglen := uint32(len(resData))
 	binary.BigEndian.PutUint32(length, msglen)
+
+	copy(data[:msglen], resData)
 
 	n, err := conn.Write(length)
 	if n != 4 || err != nil {

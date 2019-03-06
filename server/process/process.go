@@ -2,7 +2,6 @@ package process
 
 import (
 	"chatroom/common/message"
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -31,9 +30,7 @@ func serverProcessMsg(conn net.Conn, msg *message.Msg) (err error) {
 
 	switch msg.Type {
 	case message.TypeLogin: //处理登陆逻辑
-		var login message.DataLogin
-		err = json.Unmarshal([]byte(msg.Data), &login)
-		UserLoginProcess(conn, &login)
+		UserLoginProcess(conn, msg)
 	case message.TypeRegister: //处理注册逻辑
 
 	default:

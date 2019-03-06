@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chatroom/client/process"
 	"fmt"
 )
 
@@ -29,12 +30,8 @@ func main() {
 			fmt.Scanf("%d\n", &username)
 			fmt.Print("输入密码：")
 			fmt.Scanf("%s\n", &password)
-			err := login(username, password)
-			if err != nil {
-				fmt.Println("登陆失败")
-			} else {
-				fmt.Println("登陆成功")
-			}
+			process.Login(username, password)
+			loop = false
 		case 2:
 		case 3:
 		case 4:
