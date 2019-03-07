@@ -1,6 +1,7 @@
 package main
 
 import (
+	"chatroom/common/message"
 	"chatroom/server/model"
 	"chatroom/server/process"
 	"fmt"
@@ -17,10 +18,10 @@ func main() {
 	// 初始化DAO
 	model.InitDAO()
 
-	// model.UserDao.Register(&model.User{
+	// model.UserDao.Register(&message.User{
 	// 	UserId:   100,
 	// 	UserPwd:  "123456",
-	// 	UserName: "Alex",
+	// 	Username: "Alex",
 	// })
 
 	//开启监听8889

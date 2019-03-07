@@ -98,7 +98,7 @@ func ReadResponse(conn net.Conn) (msg Response, err error) {
 }
 
 func WriteResponse(conn net.Conn, msg Response) (err error) {
-	resData, err := Serializer(msg) //ERROR 同上
+	resData, err := json.Marshal(msg) //ERROR 同上
 	if err != nil {
 		fmt.Println("Serializer(msg) error:", err)
 		return
