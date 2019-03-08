@@ -1,7 +1,6 @@
 package main
 
 import (
-	"chatroom/common/message"
 	"chatroom/server/model"
 	"chatroom/server/process"
 	"fmt"

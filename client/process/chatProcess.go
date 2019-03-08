@@ -20,7 +20,24 @@ func sendMessage(conn net.Conn) {
 		fmt.Scanf("%d\n", &index)
 		switch index {
 		case 1:
-			fmt.Println("---------1.在线用户列表----------")
+			fmt.Println("---------获取在线用户列表----------")
+			var msg message.Msg
+			msg.Type = message.TypeGetOnlineUsers
+			err := message.WriteMsg(conn, msg)
+			if err != nil {
+				fmt.Println("message.WriteMsg(conn, msg) error: ", err)
+				break
+			}
+
+			res, err := message.ReadResponse(conn)
+			if err != nil {
+				fmt.Println("message.ReadResponse(conn) error: ", err)
+				break
+			}
+			for _, info := range res.Infos {
+				fmt.Printf("\tid:%d\tname:%s\n", info.UserId, info.Username)
+			}
+
 		case 2:
 			fmt.Println("---------2.发送消息----------")
 		case 3:

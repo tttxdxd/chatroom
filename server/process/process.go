@@ -6,12 +6,18 @@ import (
 	"net"
 )
 
+var ERROR_EXIT = fmt.Errorf("exit")
+
 // 服务器信息分发 处理中心
 func Process(conn net.Conn) {
 	defer fmt.Println("断开与客户端的连接")
 	defer conn.Close()
 
 	fmt.Println("服务端 开始处理 客户端 数据")
+	userProcess := UserProcess{
+		conn:   conn,
+		userId: 0,
+	}
 	for {
 		var msg message.Msg
 		msg, err := message.ReadMsg(conn)
@@ -19,11 +25,11 @@ func Process(conn net.Conn) {
 			fmt.Println("readMessage(conn) err:", err)
 			return
 		}
-		if msg.Type == message.TypeClientExit { //退出
+
+		err = serverProcessMsg(&userProcess, &msg)
+		if err == ERROR_EXIT {
 			return
-		}
-		err = serverProcessMsg(conn, &msg)
-		if err != nil {
+		} else if err != nil {
 			fmt.Println("readMessage(conn) err:", err)
 			return
 		}
@@ -31,16 +37,21 @@ func Process(conn net.Conn) {
 }
 
 // 服务器根据消息类型 分发给不同的处理器 决定不同的处理方式
-func serverProcessMsg(conn net.Conn, msg *message.Msg) (err error) {
+func serverProcessMsg(userProcess *UserProcess, msg *message.Msg) (err error) {
 	if msg == nil {
 		return
 	}
 
 	switch msg.Type {
 	case message.TypeLogin: //处理登陆逻辑
-		err = UserLoginProcess(conn, msg)
+		err = userProcess.UserLoginProcess(msg)
 	case message.TypeRegister: //处理注册逻辑
-		err = UserRegisterProcess(conn, msg)
+		err = userProcess.UserRegisterProcess(msg)
+	case message.TypeClientExit: //处理退出逻辑
+		userProcess.UserLogoutProcess()
+		err = ERROR_EXIT
+	case message.TypeGetOnlineUsers: //处理获取当前在线用户列表逻辑
+		err = userProcess.UserGetAllOnlineUsers(msg)
 	default:
 		fmt.Println("不存在的消息类型")
 	}

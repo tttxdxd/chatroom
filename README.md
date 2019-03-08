@@ -3,6 +3,8 @@
 
 1. 自定义消息协议
 
+![架构图](https://raw.githubusercontent.com/tttxdxd/chatroom/master/README/chatroom.png)
+
 ## 服务端
 
 1. 建立与客户端的连接

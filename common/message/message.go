@@ -3,6 +3,7 @@ package message
 const (
 	TypeLogin = iota
 	TypeRegister
+	TypeGetOnlineUsers //获取在线用户列表（聊天室内）
 	TypeClientExit
 )
 
@@ -16,6 +17,12 @@ const (
 type Msg struct {
 	Type uint   `json:"type"`
 	Data string `json:"data"`
+}
+
+// User公共的信息
+type UserInfo struct {
+	UserId   uint32 `json:"user_id"`
+	Username string `json:"username"`
 }
 
 type User struct {
@@ -34,6 +41,7 @@ type DataRegister struct {
 }
 
 type Response struct {
-	Code  uint32 `json:"code"`
-	Error string `json:"error"`
+	Code  uint32     `json:"code"`  // 错误码
+	Infos []UserInfo `json:"infos"` // 获取多个用户信息时，自此取
+	Error string     `json:"error"` // 发生错误时，自此取
 }
