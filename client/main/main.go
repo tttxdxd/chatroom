@@ -2,6 +2,7 @@ package main
 
 import (
 	"chatroom/client/process"
+	"chatroom/client/view"
 	"fmt"
 	"net"
 )
@@ -38,36 +39,35 @@ func main() {
 
 	process.InitProcess(Conn)
 
-	for {
-		fmt.Println("\t\t\t聊天室 客户端：")
-		fmt.Println("\t\t\t1. 进入聊天室")
-		fmt.Println("\t\t\t2. 创建用户")
-		fmt.Println("\t\t\t3. 销毁用户")
-		fmt.Println("\t\t\t4. 退出聊天室客户端")
-		fmt.Println("————————————————————————————————————")
-		index := 0
-		fmt.Print("输入选择（1，2，3，4）：")
-		fmt.Scanf("%d\n", &index)
-		switch index {
-		case 1:
-			fmt.Println("进入聊天室")
-			var username uint32
-			var password string
-			fmt.Print("输入用户ID：")
-			fmt.Scanf("%d\n", &username)
-			fmt.Print("输入密码：")
-			fmt.Scanf("%s\n", &password)
-			process.Instance.Login(username, password)
-			fmt.Println("退出聊天室")
-		case 2:
-			process.Instance.Register()
-		case 3:
-		case 4:
-			process.Instance.Exit()
-			fmt.Println("退出成功")
-			return
-		default:
-			fmt.Println("输入错误")
-		}
-	}
+	go process.Instance.ReceiveMessage()
+
+	view.WindowShow()
+
+	// for {
+	// 	fmt.Println("\t\t\t聊天室 客户端：")
+	// 	fmt.Println("\t\t\t1. 进入聊天室")
+	// 	fmt.Println("\t\t\t2. 创建用户")
+	// 	fmt.Println("\t\t\t3. 销毁用户")
+	// 	fmt.Println("\t\t\t4. 退出聊天室客户端")
+	// 	fmt.Println("————————————————————————————————————")
+	// 	index := 0
+	// 	fmt.Print("输入选择（1，2，3，4）：")
+	// 	fmt.Scanf("%d\n", &index)
+	// 	switch index {
+	// 	case 1:
+	// 		fmt.Println("进入聊天室")
+
+	// 		process.Instance.Login()
+	// 		fmt.Println("退出聊天室")
+	// 	case 2:
+	// 		process.Instance.Register()
+	// 	case 3:
+	// 	case 4:
+	// 		process.Instance.Exit()
+	// 		fmt.Println("退出成功")
+	// 		return
+	// 	default:
+	// 		fmt.Println("输入错误")
+	// 	}
+	// }
 }

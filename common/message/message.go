@@ -1,22 +1,26 @@
 package message
 
 const (
-	TypeLogin = iota
-	TypeRegister
-	TypeGetOnlineUsers //获取在线用户列表（聊天室内）
-	TypeClientExit
-)
-
-const (
-	CodeLoginSuccess    = iota // 登陆成功
+	PlaceHolder         = iota //
+	TypeLogin                  //
+	CodeLoginSuccess           // 登陆成功
 	CodeLoginFailed            // 登陆失败 1.密码错误 2.用户名不存在 3.服务器错误
+	TypeRegister               //
 	CodeRegisterSuccess        // 注册成功
 	CodeRegisterFailed         // 注册失败 1.用户名已存在
+	TypeGetOnlineUsers         //获取在线用户列表（聊天室内）
+	TypeClientExit             //
 )
 
+const ()
+
+type MsgType uint
+type MsgID uint
+
 type Msg struct {
-	Type uint   `json:"type"`
-	Data string `json:"data"`
+	Type MsgType `json:"type"`
+	ID   MsgID   `json:"id"`
+	Data string  `json:"data"`
 }
 
 // User公共的信息
@@ -41,7 +45,6 @@ type DataRegister struct {
 }
 
 type Response struct {
-	Code  uint32     `json:"code"`  // 错误码
 	Infos []UserInfo `json:"infos"` // 获取多个用户信息时，自此取
 	Error string     `json:"error"` // 发生错误时，自此取
 }

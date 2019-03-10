@@ -3,11 +3,10 @@ package process
 import (
 	"chatroom/common/message"
 	"fmt"
-	"net"
 )
 
 // TODO 需对应同步退出 使用chan
-func sendMessage(conn net.Conn) {
+func (this *Processor) sendMessage() {
 	for {
 		fmt.Println("---------当前客户端上线----------")
 		fmt.Println("---------1.在线用户列表----------")
@@ -23,20 +22,14 @@ func sendMessage(conn net.Conn) {
 			fmt.Println("---------获取在线用户列表----------")
 			var msg message.Msg
 			msg.Type = message.TypeGetOnlineUsers
-			err := message.WriteMsg(conn, msg)
+			message.Center.AddMsg(&msg)
+			err := message.WriteMsg(this.conn, &msg)
 			if err != nil {
 				fmt.Println("message.WriteMsg(conn, msg) error: ", err)
 				break
 			}
 
-			res, err := message.ReadResponse(conn)
-			if err != nil {
-				fmt.Println("message.ReadResponse(conn) error: ", err)
-				break
-			}
-			for _, info := range res.Infos {
-				fmt.Printf("\tid:%d\tname:%s\n", info.UserId, info.Username)
-			}
+			block <- true
 
 		case 2:
 			fmt.Println("---------2.发送消息----------")
@@ -50,17 +43,22 @@ func sendMessage(conn net.Conn) {
 	}
 }
 
-func receiveMessage(conn net.Conn) {
+func (this *Processor) ReceiveMessage() {
 	for {
-		msg, err := message.ReadMsg(conn)
+		fmt.Println("start readMSg")
+		msg, err := message.ReadMsg(this.conn)
 		if err != nil {
 			fmt.Println(" message.ReadMsg(conn) error:", err)
 			return
 		}
 		fmt.Println("msg=", msg)
-		// 处理服务端发送的消息
-		// switch msg.Type{
-		// 	case
-		// }
+
+		err = message.Center.Distribute(msg)
+		if err != nil {
+			fmt.Println("Distribute(&msg) error:", err)
+			return
+		}
+		//<-block
+		fmt.Println("end readMSg")
 	}
 }

@@ -32,12 +32,10 @@ func (this *userManager) GetUserProcessById(userId uint32) (userProcess *UserPro
 	return nil
 }
 
-func (this *userManager) GetAllUsersInfo(userId uint32) (infos []message.UserInfo) {
+// 获取所有在线用户信息
+func (this *userManager) GetAllUsersInfo() (infos []message.UserInfo) {
 	infos = make([]message.UserInfo, 0, len(this.onlineUserList))
 	for _, v := range this.onlineUserList {
-		if userId == v.userId {
-			continue
-		}
 		info := message.UserInfo{
 			UserId:   v.userId,
 			Username: v.username,
@@ -45,4 +43,8 @@ func (this *userManager) GetAllUsersInfo(userId uint32) (infos []message.UserInf
 		infos = append(infos, info)
 	}
 	return
+}
+
+func (this *userManager) NotifyAllUsers(userId uint32) {
+	//
 }

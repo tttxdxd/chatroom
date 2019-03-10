@@ -6,7 +6,7 @@ import (
 	"net"
 )
 
-var ERROR_EXIT = fmt.Errorf("exit")
+var ERROR_EXIT = fmt.Errorf("客户端发送断开请求")
 
 // 服务器信息分发 处理中心
 func Process(conn net.Conn) {
@@ -19,15 +19,15 @@ func Process(conn net.Conn) {
 		userId: 0,
 	}
 	for {
-		var msg message.Msg
 		msg, err := message.ReadMsg(conn)
 		if err != nil {
 			fmt.Println("readMessage(conn) err:", err)
 			return
 		}
 
-		err = serverProcessMsg(&userProcess, &msg)
+		err = serverProcessMsg(&userProcess, msg)
 		if err == ERROR_EXIT {
+			fmt.Println(err.Error())
 			return
 		} else if err != nil {
 			fmt.Println("readMessage(conn) err:", err)
@@ -51,7 +51,7 @@ func serverProcessMsg(userProcess *UserProcess, msg *message.Msg) (err error) {
 		userProcess.UserLogoutProcess()
 		err = ERROR_EXIT
 	case message.TypeGetOnlineUsers: //处理获取当前在线用户列表逻辑
-		err = userProcess.UserGetAllOnlineUsers(msg)
+		err = userProcess.UserGetAllOnlineUsersProcess(msg)
 	default:
 		fmt.Println("不存在的消息类型")
 	}

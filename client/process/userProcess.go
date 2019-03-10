@@ -10,6 +10,8 @@ import (
 
 var Instance *Processor
 
+var block chan bool
+
 type Processor struct {
 	conn net.Conn
 }
@@ -18,9 +20,21 @@ func InitProcess(conn net.Conn) {
 	Instance = &Processor{
 		conn: conn,
 	}
+
+	block = make(chan bool)
+
 }
 
 func (this *Processor) Login(user_id uint32, user_pwd string) (err error) {
+	// var user_id uint32
+	// var user_pwd string
+	// fmt.Print("输入用户ID：")
+	// fmt.Scanf("%d\n", &user_id)
+	// fmt.Print("输入密码：")
+	// fmt.Scanf("%s\n", &user_pwd)
+
+	//---------------------------------------------------------
+
 	//构建结构体
 	msg := message.Msg{
 		Type: message.TypeLogin,
@@ -46,90 +60,69 @@ func (this *Processor) Login(user_id uint32, user_pwd string) (err error) {
 	// }
 	// defer conn.Close()
 
+	message.Center.AddMsg(&msg)
+
 	//发送用户登陆数据
-	err = message.WriteMsg(this.conn, msg)
+	err = message.WriteMsg(this.conn, &msg)
 	if err != nil {
 		fmt.Println("message.WriteMsg(conn, msg) error", err)
 		return
 	}
 
-	//返回服务端数据
-	res, err := message.ReadResponse(this.conn)
-	if err != nil {
-		fmt.Println(" message.ReadMsg(conn) error:", err)
-		return
-	}
-
-	switch res.Code {
-	case message.CodeLoginSuccess:
-		fmt.Println("登陆成功")
-
-		sendMessage(this.conn)
-		go receiveMessage(this.conn)
-	case message.CodeLoginFailed:
-		fmt.Println(res.Error)
-	default:
-	}
+	// //返回服务端数据
+	// res, err := message.ReadResponse(this.conn)
+	// if err != nil {
+	// 	fmt.Println(" message.ReadMsg(conn) error:", err)
+	// 	return
+	// }
 
 	return
 }
 
 // 注册处理逻辑
 func (this *Processor) Register() {
-	for {
-		fmt.Println("开始创建用户（注册）")
-		var user message.User
-		fmt.Print("输入用户ID：")
-		fmt.Scanf("%d\n", &user.UserId)
-		fmt.Print("输入用户名：")
-		fmt.Scanf("%s\n", &user.Username)
-		fmt.Print("输入密码：")
-		fmt.Scanf("%s\n", &user.UserPwd)
 
-		//-------------------------------------------------------------------------
+	fmt.Println("开始创建用户（注册）")
+	var user message.User
+	fmt.Print("输入用户ID：")
+	fmt.Scanf("%d\n", &user.UserId)
+	fmt.Print("输入用户名：")
+	fmt.Scanf("%s\n", &user.Username)
+	fmt.Print("输入密码：")
+	fmt.Scanf("%s\n", &user.UserPwd)
 
-		data, err := json.Marshal(user)
-		if err != nil {
-			fmt.Println("json.Marshal(user) error: ", err)
-			return
-		}
+	//-------------------------------------------------------------------------
 
-		msg := message.Msg{
-			Type: message.TypeRegister,
-			Data: string(data),
-		}
-		fmt.Println(msg)
-
-		// 发送将注册的用户信息到服务端
-		err = message.WriteMsg(this.conn, msg)
-		if err != nil {
-			fmt.Println("message.WriteMsg(conn, msg) error", err)
-			return
-		}
-
-		//返回服务端回应数据
-		res, err := message.ReadResponse(this.conn)
-		if err != nil {
-			fmt.Println(" message.ReadMsg(conn) error:", err)
-			return
-		}
-
-		switch res.Code {
-		case message.CodeRegisterSuccess:
-			fmt.Println("注册成功")
-			if JudgeWhetherToContinue("登陆") {
-				this.Login(user.UserId, user.UserPwd)
-			} else {
-				return
-			}
-		case message.CodeRegisterFailed:
-			fmt.Println(res.Error)
-			if !JudgeWhetherToContinue("注册") {
-				return
-			}
-		default:
-		}
+	data, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println("json.Marshal(user) error: ", err)
+		return
 	}
+
+	msg := message.Msg{
+		Type: message.TypeRegister,
+		Data: string(data),
+	}
+	fmt.Println(msg)
+
+	message.Center.AddMsg(&msg)
+
+	// 发送将注册的用户信息到服务端
+	err = message.WriteMsg(this.conn, &msg)
+	if err != nil {
+		fmt.Println("message.WriteMsg(conn, msg) error", err)
+		return
+	}
+
+	block <- true
+
+	// //返回服务端回应数据
+	// res, err := message.ReadResponse(this.conn)
+	// if err != nil {
+	// 	fmt.Println(" message.ReadMsg(conn) error:", err)
+	// 	return
+	// }
+
 	return
 }
 
@@ -139,7 +132,7 @@ func (this *Processor) Exit() (err error) {
 		Type: message.TypeClientExit,
 		Data: "",
 	}
-	err = message.WriteMsg(this.conn, msg)
+	err = message.WriteMsg(this.conn, &msg)
 	if err != nil {
 		fmt.Println("message.WriteMsg(conn, msg) error: ", err)
 		return
