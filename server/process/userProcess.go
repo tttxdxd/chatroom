@@ -38,6 +38,12 @@ func (this *UserProcess) UserLoginProcess(msg *message.Msg) (err error) {
 		//添加该用户到在线用户列表（由UserManager维护）
 		this.userId = user.UserId
 		this.username = user.Username
+		response.Infos = []message.UserInfo{
+			message.UserInfo{
+				UserId:   user.UserId,
+				Username: user.Username,
+			},
+		}
 		UserManager.AddUser(this)
 	}
 	//fmt.Println(user)
@@ -82,6 +88,12 @@ func (this *UserProcess) UserRegisterProcess(msg *message.Msg) (err error) {
 	} else { // 注册成功
 		resType = message.CodeRegisterSuccess
 		response.Error = ""
+		response.Infos = []message.UserInfo{
+			message.UserInfo{
+				UserId:   user.UserId,
+				Username: user.Username,
+			},
+		}
 	}
 
 	res, ok := message.NewMsg(msg.ID, resType, response)
@@ -104,7 +116,7 @@ func (this *UserProcess) UserGetAllOnlineUsersProcess(msg *message.Msg) (err err
 	var resType message.MsgType
 	var response message.Response
 
-	resType = message.PlaceHolder
+	resType = message.CodeOnlineUsers
 	response.Infos = UserManager.GetAllUsersInfo()
 	fmt.Println(UserManager.onlineUserList)
 	fmt.Println(response)
@@ -124,6 +136,32 @@ func (this *UserProcess) UserGetAllOnlineUsersProcess(msg *message.Msg) (err err
 	return
 }
 
+// 通知所有在线用户 1.在线消息 2.离线消息 3.群发聊天信息
 func (this *UserProcess) UserNotifyAllUsersProcess(msg *message.Msg) {
+	UserManager.NotifyAllUsers(this, msg)
+}
 
+// 通知用户
+func (this *UserProcess) UserNotifyOneUserProcess(info *message.UserInfo, msg *message.Msg) {
+	var response message.Response
+	response.Infos = []message.UserInfo{
+		message.UserInfo{
+			UserId:   info.UserId,
+			Username: info.Username,
+		},
+	}
+	response.Text = msg.Data
+
+	msg, ok := message.NewMsg(0, msg.Type, response)
+	if !ok {
+		fmt.Println("message.NewMsg(msg.ID, resType, response) error")
+		return
+	}
+
+	err := message.WriteMsg(this.conn, msg)
+	if err != nil {
+		fmt.Println(" message.WriteMsg(conn, response) error:", err)
+		return
+	}
+	return
 }

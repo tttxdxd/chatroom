@@ -45,6 +45,20 @@ func (this *userManager) GetAllUsersInfo() (infos []message.UserInfo) {
 	return
 }
 
-func (this *userManager) NotifyAllUsers(userId uint32) {
-	//
+// 通知所有在线用户，除了自己
+func (this *userManager) NotifyAllUsers(p *UserProcess, msg *message.Msg) {
+
+	info := &message.UserInfo{
+		p.userId,
+		p.username,
+	}
+
+	for id, v := range this.onlineUserList {
+		if p.userId == id {
+			continue
+		}
+
+		v.UserNotifyOneUserProcess(info, msg)
+	}
+
 }

@@ -10,8 +10,6 @@ import (
 
 var Instance *Processor
 
-var block chan bool
-
 type Processor struct {
 	conn net.Conn
 }
@@ -20,8 +18,6 @@ func InitProcess(conn net.Conn) {
 	Instance = &Processor{
 		conn: conn,
 	}
-
-	block = make(chan bool)
 
 }
 
@@ -80,16 +76,19 @@ func (this *Processor) Login(user_id uint32, user_pwd string) (err error) {
 }
 
 // 注册处理逻辑
-func (this *Processor) Register() {
+func (this *Processor) Register(username string, password string) {
 
 	fmt.Println("开始创建用户（注册）")
 	var user message.User
-	fmt.Print("输入用户ID：")
-	fmt.Scanf("%d\n", &user.UserId)
-	fmt.Print("输入用户名：")
-	fmt.Scanf("%s\n", &user.Username)
-	fmt.Print("输入密码：")
-	fmt.Scanf("%s\n", &user.UserPwd)
+	// fmt.Print("输入用户ID：")
+	// fmt.Scanf("%d\n", &user.UserId)
+	// fmt.Print("输入用户名：")
+	// fmt.Scanf("%s\n", &user.Username)
+	// fmt.Print("输入密码：")
+	// fmt.Scanf("%s\n", &user.UserPwd)
+
+	user.Username = username
+	user.UserPwd = password
 
 	//-------------------------------------------------------------------------
 
@@ -114,8 +113,6 @@ func (this *Processor) Register() {
 		return
 	}
 
-	block <- true
-
 	// //返回服务端回应数据
 	// res, err := message.ReadResponse(this.conn)
 	// if err != nil {
@@ -131,6 +128,45 @@ func (this *Processor) Exit() (err error) {
 	msg := message.Msg{
 		Type: message.TypeClientExit,
 		Data: "",
+	}
+	err = message.WriteMsg(this.conn, &msg)
+	if err != nil {
+		fmt.Println("message.WriteMsg(conn, msg) error: ", err)
+		return
+	}
+	return
+}
+
+func (this *Processor) GetOnlineUsers() (err error) {
+	msg := message.Msg{
+		Type: message.TypeGetOnlineUsers,
+	}
+	err = message.WriteMsg(this.conn, &msg)
+	if err != nil {
+		fmt.Println("message.WriteMsg(conn, msg) error: ", err)
+		return
+	}
+	return
+}
+
+// 通知所有在线用户 （除了自己）
+func (this *Processor) NotifyOnlineUsers() (err error) {
+	msg := message.Msg{
+		Type: message.TypeNotifyOnlineUsers,
+	}
+	err = message.WriteMsg(this.conn, &msg)
+	if err != nil {
+		fmt.Println("message.WriteMsg(conn, msg) error: ", err)
+		return
+	}
+	return
+}
+
+// 发送消息（暂定群发）
+func (this *Processor) SendMessage(text string) (err error) {
+	msg := message.Msg{
+		Type: message.TypeSendMessage,
+		Data: text,
 	}
 	err = message.WriteMsg(this.conn, &msg)
 	if err != nil {

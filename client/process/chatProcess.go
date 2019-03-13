@@ -29,8 +29,6 @@ func (this *Processor) sendMessage() {
 				break
 			}
 
-			block <- true
-
 		case 2:
 			fmt.Println("---------2.发送消息----------")
 		case 3:
@@ -45,7 +43,6 @@ func (this *Processor) sendMessage() {
 
 func (this *Processor) ReceiveMessage() {
 	for {
-		fmt.Println("start readMSg")
 		msg, err := message.ReadMsg(this.conn)
 		if err != nil {
 			fmt.Println(" message.ReadMsg(conn) error:", err)
@@ -53,12 +50,6 @@ func (this *Processor) ReceiveMessage() {
 		}
 		fmt.Println("msg=", msg)
 
-		err = message.Center.Distribute(msg)
-		if err != nil {
-			fmt.Println("Distribute(&msg) error:", err)
-			return
-		}
-		//<-block
-		fmt.Println("end readMSg")
+		go message.Center.Distribute(msg) // 需开启协程运行
 	}
 }

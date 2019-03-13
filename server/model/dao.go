@@ -48,6 +48,33 @@ func (this *UserDAO) getUserById(id uint32) (user *message.User, err error) {
 	return
 }
 
+func (this *UserDAO) getUserCount() (count uint32, err error) {
+	client := redisPool.Get()
+	res, err := client.HLen(this.key).Result()
+	if err != nil {
+		err = ERROR_SERVER
+		return
+	}
+	count = uint32(res)
+	return
+}
+
+// 新的Id从100000开始
+var baseId = uint32(100000)
+
+func (this *UserDAO) getNewUserId() (id uint32, err error) {
+	count, err := this.getUserCount()
+	if err != nil {
+		return
+	}
+	id = count + baseId
+	_, err = this.getUserById(id)
+	if err != nil {
+		return
+	}
+	return
+}
+
 func (this *UserDAO) addUser(user *message.User) (err error) {
 	client := redisPool.Get()
 	data, err := json.Marshal(*user)
@@ -76,7 +103,8 @@ func (this *UserDAO) Login(userId uint32, userPwd string) (user *message.User, e
 }
 
 func (this *UserDAO) Register(user *message.User) (err error) {
-	_, err = this.getUserById(user.UserId)
+	//_, err = this.getUserById(user.UserId)
+	user.UserId, err = this.getNewUserId()
 	if err == ERROR_USER_NOTEXISTS { //数据库中无此账号id，可以注册
 		err = this.addUser(user) //返回nil即注册成功
 		return
