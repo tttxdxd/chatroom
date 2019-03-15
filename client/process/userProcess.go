@@ -123,12 +123,11 @@ func (this *Processor) Register(username string, password string) {
 	return
 }
 
-func (this *Processor) Exit() (err error) {
-	defer fmt.Println("断开与服务端的连接")
+func (this *Processor) GetOnlineUsers() (err error) {
 	msg := message.Msg{
-		Type: message.TypeClientExit,
-		Data: "",
+		Type: message.TypeGetOnlineUsers,
 	}
+	message.Center.AddMsg(&msg)
 	err = message.WriteMsg(this.conn, &msg)
 	if err != nil {
 		fmt.Println("message.WriteMsg(conn, msg) error: ", err)
@@ -137,9 +136,11 @@ func (this *Processor) Exit() (err error) {
 	return
 }
 
-func (this *Processor) GetOnlineUsers() (err error) {
+func (this *Processor) Exit() (err error) {
+	defer fmt.Println("断开与服务端的连接")
 	msg := message.Msg{
-		Type: message.TypeGetOnlineUsers,
+		Type: message.TypeClientExit,
+		Data: "",
 	}
 	err = message.WriteMsg(this.conn, &msg)
 	if err != nil {

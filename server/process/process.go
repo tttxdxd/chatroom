@@ -20,7 +20,11 @@ func Process(conn net.Conn) {
 	}
 	for {
 		msg, err := message.ReadMsg(conn)
-		if err != nil {
+		if err == message.ERROR_DISCONNECT {
+
+			fmt.Println("客户端异常关闭或断开连接")
+			msg.Type = message.TypeClientExit
+		} else if err != nil {
 			fmt.Println("readMessage(conn) err:", err)
 			return
 		}
@@ -30,9 +34,10 @@ func Process(conn net.Conn) {
 			fmt.Println(err.Error())
 			return
 		} else if err != nil {
-			fmt.Println("readMessage(conn) err:", err)
+			fmt.Println("error:", err)
 			return
 		}
+
 	}
 }
 
@@ -48,6 +53,7 @@ func serverProcessMsg(userProcess *UserProcess, msg *message.Msg) (err error) {
 	case message.TypeRegister: //处理注册逻辑
 		err = userProcess.UserRegisterProcess(msg)
 	case message.TypeClientExit: //处理退出逻辑
+
 		msg.Type = message.CodeNotifyUserLogout
 		userProcess.UserNotifyAllUsersProcess(msg)
 		userProcess.UserLogoutProcess()
@@ -59,9 +65,14 @@ func serverProcessMsg(userProcess *UserProcess, msg *message.Msg) (err error) {
 		userProcess.UserNotifyAllUsersProcess(msg)
 	case message.TypeSendMessage: //处理 发送群发消息 逻辑
 		msg.Type = message.CodeRecvMessage
-		userProcess.UserNotifyAllUsersProcess(msg)
+		err = userProcess.UserNotifyAllUsersProcess(msg)
 	default:
 		fmt.Println("不存在的消息类型")
+	}
+
+	if err == message.ERROR_DISCONNECT {
+		fmt.Println("客户端异常关闭或断开连接")
+		err = ERROR_EXIT
 	}
 	return
 }

@@ -19,8 +19,10 @@ type ChatRoomWindow struct {
 
 	chatBox *walk.ScrollView //聊天框
 
-	msgInput    *walk.TextEdit
-	msgInputBtn *walk.PushButton
+	msgInput        *walk.TextEdit
+	msgInputBtn     *walk.PushButton
+	onlineUserTable *walk.TableView
+	onlineUserModel *infoTableModel
 }
 
 func OpenChatRoom(user message.UserInfo) {
@@ -32,40 +34,73 @@ func OpenChatRoom(user message.UserInfo) {
 
 	message.Center.RegisterPassiveMsg(message.CodeRecvMessage, recvMessageTrigger)
 
+	// 注册 获取当前在线用户信息
+	message.Center.RegisterMsg(message.TypeGetOnlineUsers, getOnlineUsersTrigger)
+
 	currentUser = user
+
+	room.onlineUserModel = newInfoTableModel()
 
 	if err := (MainWindow{
 		AssignTo: &room.MainWindow,
 		Title:    "聊天室",
 		MinSize:  Size{400, 400},
-		Layout:   VBox{},
+		Layout:   HBox{MarginsZero: true},
 		Children: []Widget{
-			ScrollView{
-				AssignTo:        &room.chatBox,
-				Layout:          Flow{MarginsZero: true, SpacingZero: true},
-				VerticalFixed:   false,
-				HorizontalFixed: true,
-			},
-			GroupBox{
-				Layout:    VBox{},
-				Alignment: AlignHCenterVFar,
-				MaxSize:   Size{1000, 150},
+			Composite{
+				MinSize: Size{500, 500},
+				Layout:  VBox{},
 				Children: []Widget{
-					TextEdit{
-						MaxSize:  Size{1000, 120},
-						AssignTo: &room.msgInput,
-						VScroll:  true,
+					//=========================
+					ScrollView{
+						MinSize:         Size{500, 300},
+						Background:      SolidColorBrush{Color: walk.RGB(255, 255, 255)},
+						AssignTo:        &room.chatBox,
+						Layout:          Flow{MarginsZero: true, SpacingZero: true},
+						VerticalFixed:   false,
+						HorizontalFixed: true,
 					},
-					PushButton{
-						Text:     "发送",
-						AssignTo: &room.msgInputBtn,
-						OnClicked: func() {
-							input := room.msgInput.Text()
-							if ok := checkInput(input); ok {
-								room.msgInput.SetText("")
-								process.Instance.SendMessage(input)
-								appendMessage(room.chatBox, currentUser, input)
-							}
+					GroupBox{
+						Layout:    VBox{},
+						Alignment: AlignHCenterVFar,
+						MaxSize:   Size{1000, 150},
+						MinSize:   Size{500, 150},
+						Children: []Widget{
+							TextEdit{
+								MaxSize:  Size{1000, 130},
+								MinSize:  Size{500, 90},
+								AssignTo: &room.msgInput,
+								VScroll:  true,
+							},
+							PushButton{
+								Text:     "发送",
+								AssignTo: &room.msgInputBtn,
+								OnClicked: func() {
+									input := room.msgInput.Text()
+									if ok := checkInput(input); ok {
+										room.msgInput.SetText("")
+										process.Instance.SendMessage(input)
+										appendMessage(room.chatBox, currentUser, input)
+									}
+								},
+							},
+						},
+					},
+					//================
+
+				},
+			},
+			Composite{
+				MaxSize: Size{220, 500},
+				MinSize: Size{220, 500},
+				Layout:  VBox{},
+				Children: []Widget{
+					TableView{
+						AssignTo: &room.onlineUserTable,
+						Model:    room.onlineUserModel,
+						Columns: []TableViewColumn{
+							{Title: "用户ID"},
+							{Title: "用户名"},
 						},
 					},
 				},
@@ -77,6 +112,8 @@ func OpenChatRoom(user message.UserInfo) {
 
 	process.Instance.GetOnlineUsers()
 	process.Instance.NotifyOnlineUsers()
+
+	AddInfo(room.chatBox, time.Now().Format("2006-01-02 15:04:05"), "您已经进入了聊天室~")
 
 	room.Run()
 }
@@ -131,24 +168,43 @@ func AddInfo(box *walk.ScrollView, time, msg string) {
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	box.Synchronize(func() {
+		//composite, _ := walk.NewComposite(box)
+		// composite.SetAlignment(walk.AlignHCenterVFar)
+		// composite.SetLayout(walk.NewVBoxLayout())
+
+		// data, _ := walk.NewTextLabel(composite)
+		// data.SetTextAlignment(walk.AlignHCenterVFar)
+		// data.SetText(time)
+
+		// info, _ := walk.NewTextLabel(composite)
+		// info.SetTextAlignment(walk.AlignHCenterVFar)
+		// info.SetText(msg)
+
+		// composite.Children().Add(data)
+		// composite.Children().Add(info)
+
+		// box.Children().Add(composite)
+		// box.Layout().Update(false)
+
 		composite, _ := walk.NewComposite(box)
-		composite.SetAlignment(walk.AlignHCenterVFar)
-		composite.SetLayout(walk.NewVBoxLayout())
+		Composite{
+			MinSize:   Size{500, 32},
+			AssignTo:  &composite,
+			Layout:    VBox{},
+			Alignment: AlignHCenterVFar,
+			Children: []Widget{
+				TextLabel{
 
-		data, _ := walk.NewTextLabel(box)
-		data.SetTextAlignment(walk.AlignHCenterVFar)
-		data.SetText(time)
-
-		info, _ := walk.NewTextLabel(box)
-		info.SetTextAlignment(walk.AlignHCenterVFar)
-		info.SetText(msg)
-
-		composite.Children().Add(data)
-		composite.Children().Add(info)
-
-		box.Children().Add(composite)
+					TextAlignment: AlignHCenterVFar,
+					Text:          time,
+				},
+				TextLabel{
+					TextAlignment: AlignHCenterVFar,
+					Text:          msg,
+				},
+			},
+		}.Create(NewBuilder(box))
 		box.Layout().Update(false)
-
 		box.WndProc(box.Handle(), uint32(277), 3, 0)
 	})
 }
@@ -223,6 +279,8 @@ func AddChatBubble(box *walk.ScrollView, time, msg, userinfo string, right bool)
 	// 	box.WndProc(box.Handle(), uint32(277), 3, 0)
 	// })
 
+	// 以下可以动态改变高度，实现聊天气泡大小的自适应（根据文字量）
+
 	box.Synchronize(func() {
 
 		width := getStrWidth(msg) * 8
@@ -285,6 +343,22 @@ func getStrWidth(s string) (width int) {
 		} else {
 			width += 2
 		}
+	}
+	return
+}
+
+func getOnlineUsersTrigger(msgType message.MsgType, res *message.Response) (err error) {
+
+	switch msgType {
+	case message.CodeOnlineUsers:
+
+		for i, _ := range res.Infos {
+			process.UserManager.AddUser(&res.Infos[i])
+			room.onlineUserModel.AddItem(&res.Infos[i])
+
+		}
+		room.onlineUserModel.PublishRowsReset()
+	default:
 	}
 	return
 }

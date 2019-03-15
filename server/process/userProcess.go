@@ -56,10 +56,7 @@ func (this *UserProcess) UserLoginProcess(msg *message.Msg) (err error) {
 
 	// 返回 response 到客户端
 	err = message.WriteMsg(this.conn, res)
-	if err != nil {
-		fmt.Println(" message.WriteMsg(conn, response) error:", err)
-		return
-	}
+
 	return
 }
 
@@ -104,10 +101,7 @@ func (this *UserProcess) UserRegisterProcess(msg *message.Msg) (err error) {
 
 	// 返回 response 到客户端
 	err = message.WriteMsg(this.conn, res)
-	if err != nil {
-		fmt.Println(" message.WriteMsg(conn, response) error:", err)
-		return
-	}
+
 	return
 }
 
@@ -128,21 +122,20 @@ func (this *UserProcess) UserGetAllOnlineUsersProcess(msg *message.Msg) (err err
 	}
 
 	fmt.Println("res", res)
+
 	err = message.WriteMsg(this.conn, res)
-	if err != nil {
-		fmt.Println(" message.WriteMsg(conn, response) error:", err)
-		return
-	}
+
 	return
 }
 
 // 通知所有在线用户 1.在线消息 2.离线消息 3.群发聊天信息
-func (this *UserProcess) UserNotifyAllUsersProcess(msg *message.Msg) {
-	UserManager.NotifyAllUsers(this, msg)
+func (this *UserProcess) UserNotifyAllUsersProcess(msg *message.Msg) (err error) {
+	err = UserManager.NotifyAllUsers(this, msg)
+	return
 }
 
 // 通知用户
-func (this *UserProcess) UserNotifyOneUserProcess(info *message.UserInfo, msg *message.Msg) {
+func (this *UserProcess) UserNotifyOneUserProcess(info *message.UserInfo, msg *message.Msg) (err error) {
 	var response message.Response
 	response.Infos = []message.UserInfo{
 		message.UserInfo{
@@ -158,10 +151,7 @@ func (this *UserProcess) UserNotifyOneUserProcess(info *message.UserInfo, msg *m
 		return
 	}
 
-	err := message.WriteMsg(this.conn, msg)
-	if err != nil {
-		fmt.Println(" message.WriteMsg(conn, response) error:", err)
-		return
-	}
+	err = message.WriteMsg(this.conn, msg)
+
 	return
 }

@@ -21,6 +21,10 @@ func ReadMsg(conn net.Conn) (msg *Msg, err error) {
 
 	//读取数据长度
 	n, err := conn.Read(data[:4])
+	if n == 0 {
+		err = ERROR_DISCONNECT
+		return
+	}
 	if n != 4 || err != nil {
 		fmt.Println("conn.Read(data[:4]) error:", err)
 		err = ERROR_LEN_OF_READ
@@ -30,6 +34,10 @@ func ReadMsg(conn net.Conn) (msg *Msg, err error) {
 
 	//根据长度读取数据
 	n, err = conn.Read(data[:msgLen])
+	if n == 0 {
+		err = ERROR_DISCONNECT
+		return
+	}
 	if uint32(n) != msgLen || err != nil {
 		fmt.Println("conn.Read(data[:msgLen]) error:", err)
 		err = ERROR_LEN_OF_READ
@@ -66,12 +74,20 @@ func WriteMsg(conn net.Conn, msg *Msg) (err error) {
 	copy(data[:msglen], msgData)
 
 	n, err := conn.Write(length)
+	if n == 0 {
+		err = ERROR_DISCONNECT
+		return
+	}
 	if n != 4 || err != nil {
 		fmt.Println("conn.Write(length) error:", err)
 		return
 	}
 
 	n, err = conn.Write(data[:msglen])
+	if n == 0 {
+		err = ERROR_DISCONNECT
+		return
+	}
 	if uint32(n) != msglen || err != nil {
 		fmt.Println("conn.Write(data[:msglen]) error:", err)
 		return

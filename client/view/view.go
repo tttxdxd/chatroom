@@ -40,9 +40,6 @@ func WindowShow() {
 	// 注册 注册信息
 	message.Center.RegisterMsg(message.TypeRegister, registerTrigger)
 
-	// 注册 获取当前在线用户信息
-	message.Center.RegisterPassiveMsg(message.TypeGetOnlineUsers, getOnlineUsersTrigger)
-
 	if err := (MainWindow{
 		AssignTo: &mw.MainWindow,
 		Title:    "登录",
@@ -229,14 +226,6 @@ func registerTrigger(msgType message.MsgType, res *message.Response) (err error)
 	case message.CodeRegisterFailed:
 		mw.rinfo.SetText(res.Error)
 	default:
-	}
-	return
-}
-
-func getOnlineUsersTrigger(res *message.Response) {
-
-	for _, info := range res.Infos {
-		fmt.Printf("\tid:%d\tname:%s\n", info.UserId, info.Username)
 	}
 	return
 }
