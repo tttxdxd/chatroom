@@ -172,7 +172,7 @@ func WindowShow() {
 	}).Create(); err != nil {
 
 	}
-
+	mw.selectRegisterBtn.SetEnabled(false)
 	mw.Run()
 
 }

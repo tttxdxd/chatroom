@@ -23,6 +23,9 @@ func Process(conn net.Conn) {
 		if err == message.ERROR_DISCONNECT {
 
 			fmt.Println("客户端异常关闭或断开连接")
+			if msg == nil {
+				msg = new(message.Msg)
+			}
 			msg.Type = message.TypeClientExit
 		} else if err != nil {
 			fmt.Println("readMessage(conn) err:", err)
