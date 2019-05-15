@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"strings"
 )
 
 var Instance *Processor
@@ -18,8 +17,8 @@ func InitProcess(conn net.Conn) {
 	Instance = &Processor{
 		conn: conn,
 	}
-
 }
+
 
 func (this *Processor) Login(user_id uint32, user_pwd string) (err error) {
 	// var user_id uint32
@@ -177,22 +176,3 @@ func (this *Processor) SendMessage(text string) (err error) {
 	return
 }
 
-// 判断是否继续操作
-func JudgeWhetherToContinue(operating string) bool {
-	fmt.Println("是否继续" + operating + "（Y/N):")
-	var ok string
-	fmt.Scanf("%s\n", &ok)
-	switch strings.ToLower(ok) {
-	case "y":
-		fallthrough
-	case "yes":
-		return true
-	case "n":
-		fallthrough
-	case "no":
-		fallthrough
-	default:
-		return false
-	}
-	return false
-}

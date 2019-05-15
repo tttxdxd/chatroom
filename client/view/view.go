@@ -10,10 +10,15 @@ import (
 	. "github.com/lxn/walk/declarative"
 )
 
+var Address = "127.0.0.1:8889"
+var Connected = "未连接"
+
 var mw = new(MyMainWindow)
 
 type MyMainWindow struct {
 	*walk.MainWindow
+
+	stateLabel *walk.TextLabel
 
 	userInput *walk.LineEdit
 	pwdInput  *walk.LineEdit
@@ -32,7 +37,22 @@ type MyMainWindow struct {
 	rinfo *walk.TextLabel
 }
 
+func StateChange() {
+	if mw != nil && mw.stateLabel != nil {
+		_ = mw.stateLabel.SetText(fmt.Sprintf("当前连接地址：%s 当前状态：%s", Address, Connected))
+		if Connected=="未连接"{
+			mw.loginBox.SetEnabled(false)
+			mw.registerBox.SetEnabled(false)
+		}else{
+			mw.loginBox.SetEnabled(true)
+			mw.registerBox.SetEnabled(true)
+		}
+	}
+}
+
 func WindowShow() {
+
+	Address = readHost()
 
 	// 注册 登陆信息
 	message.Center.RegisterMsg(message.TypeLogin, loginTrigger)
@@ -46,6 +66,22 @@ func WindowShow() {
 		MinSize:  Size{300, 200},
 		Layout:   VBox{},
 		Children: []Widget{
+			GroupBox{
+				Layout: VBox{},
+				Children: []Widget{
+					TextLabel{
+						AssignTo: &mw.stateLabel,
+						Text:     fmt.Sprintf("当前连接地址：%s 当前状态：%s", Address, Connected),
+					},
+					PushButton{
+						AssignTo: &mw.selectRegisterBtn,
+						Text:     "设置",
+						OnClicked: func() {
+							OpenSettingsView()
+						},
+					},
+				},
+			},
 			GroupBox{
 				Layout: HBox{},
 				Children: []Widget{
@@ -173,6 +209,15 @@ func WindowShow() {
 
 	}
 	mw.selectRegisterBtn.SetEnabled(false)
+
+	if Connected=="未连接"{
+		mw.loginBox.SetEnabled(false)
+		mw.registerBox.SetEnabled(false)
+	}else{
+		mw.loginBox.SetEnabled(true)
+		mw.registerBox.SetEnabled(true)
+	}
+
 	mw.Run()
 
 }

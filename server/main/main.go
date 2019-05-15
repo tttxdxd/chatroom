@@ -3,11 +3,14 @@ package main
 import (
 	"chatroom/server/model"
 	"chatroom/server/process"
+	"flag"
 	"fmt"
 	"net"
 )
 
 func main() {
+	port:=flag.String("port","8889","listen port.")
+	flag.Parse()
 
 	//开启redis连接池
 	err := model.InitPool(":6379", "")
@@ -24,8 +27,9 @@ func main() {
 	// })
 
 	//开启监听8889
-	fmt.Println("服务端 开始监听 8889 端口")
-	listen, err := net.Listen("tcp", "localhost:8889")
+
+	fmt.Println("服务端 开始监听",*port,"端口")
+	listen, err := net.Listen("tcp", "0.0.0.0:"+*port)
 	if err != nil {
 		fmt.Println("listen err:", err)
 		return

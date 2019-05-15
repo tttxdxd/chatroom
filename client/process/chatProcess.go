@@ -41,22 +41,42 @@ import (
 // 	}
 // }
 
+var changeCh = make(chan struct{})
+
+func ChangeCh() {
+	changeCh <- struct{}{}
+}
+
 func (this *Processor) ReceiveMessage() {
-	for {
-		msg, err := message.ReadMsg(this.conn)
-		if err == message.ERROR_DISCONNECT {
+	defer this.conn.Close()
 
-			fmt.Println("服务端异常关闭或断开连接")
+	msgCh := make(chan *message.Msg)
+	go func() {
+		for {
+			msg, err := message.ReadMsg(this.conn)
+			if err == message.ERROR_DISCONNECT {
 
-			// TODO 进入断线重连 3次后彻底退出 或 隔一段时间尝试进行连接
+				fmt.Println("服务端异常关闭或断开连接")
 
-			return
-		} else if err != nil {
-			fmt.Println(" message.ReadMsg(conn) error:", err)
-			return
+				// TODO 进入断线重连 3次后彻底退出 或 隔一段时间尝试进行连接
+				//changeCh <- struct{}{}
+				return
+			} else if err != nil {
+				fmt.Println(" message.ReadMsg(conn) error:", err)
+				//changeCh <- struct{}{}
+				return
+			}
+			fmt.Println("msg=", msg)
+			msgCh <- msg
 		}
-		fmt.Println("msg=", msg)
-
-		go message.Center.Distribute(msg) // 需开启协程运行
+	}()
+	for {
+		select {
+		case <-changeCh:
+			println("close chan")
+			return
+		case msg := <-msgCh:
+			go message.Center.Distribute(msg) // 需开启协程运行
+		}
 	}
 }

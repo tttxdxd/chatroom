@@ -5,9 +5,32 @@ import (
 	"chatroom/client/view"
 	"fmt"
 	"net"
+	"time"
 )
 
 var Conn net.Conn
+
+func tcpReconnect() {
+	time.Sleep(2*time.Second)
+	count := 0
+	for {
+		count++
+		Conn, err := net.Dial("tcp", view.Address)
+		if err != nil {
+			fmt.Printf("第%d次连接失败 error:%v\n", count, err)
+			view.Connected = "未连接"
+			view.StateChange()
+			time.Sleep(3 * time.Second)
+			continue
+		}
+		view.Connected = "已连接"
+		fmt.Printf("连接 %s 成功\n",view.Address)
+		view.StateChange()
+		process.InitProcess(Conn)
+
+		process.Instance.ReceiveMessage()
+	}
+}
 
 func tryConnectServer(address string) (err error) {
 	count := 0    //尝试连接的次数
@@ -29,17 +52,17 @@ func tryConnectServer(address string) (err error) {
 
 func main() {
 
-	err := tryConnectServer("localhost:8889")
-	if err != nil {
-		fmt.Println("客户端发起连接失败...")
-		return
-	}
+	//err := tryConnectServer("localhost:8889")
+	//if err != nil {
+	//	fmt.Println("客户端发起连接失败...")
+	//	return
+	//}
 
-	defer Conn.Close()
+	//process.InitProcess(Conn)
+	//
+	//go process.Instance.ReceiveMessage()
 
-	process.InitProcess(Conn)
-
-	go process.Instance.ReceiveMessage()
+	go tcpReconnect()
 
 	view.WindowShow()
 
