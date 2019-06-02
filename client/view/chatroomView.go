@@ -115,6 +115,10 @@ func OpenChatRoom(user message.UserInfo) {
 
 	AddInfo(room.chatBox, time.Now().Format("2006-01-02 15:04:05"), "您已经进入了聊天室~")
 
+	room.Closing().Attach(func(canceled *bool, reason walk.CloseReason) {
+		CloseView()
+	})
+
 	room.Run()
 }
 
@@ -147,6 +151,9 @@ func notifyUserLogoutTrigger(response *message.Response) {
 	info := strconv.FormatUint(uint64(user.UserId), 10) + " : " + user.Username + "下线了"
 	timeS := time.Now().Format("2006-01-02 15:04:05")
 
+	process.UserManager.RemoveUser(user.UserId)
+	room.onlineUserModel.RemoveItem(user.UserId)
+	room.onlineUserModel.PublishRowsReset()
 	AddInfo(room.chatBox, timeS, info)
 
 	fmt.Println(response.Infos[0])
@@ -159,6 +166,9 @@ func notifyUserOnlineTrigger(response *message.Response) {
 	info := strconv.FormatUint(uint64(user.UserId), 10) + " : " + user.Username + "上线了"
 	timeS := time.Now().Format("2006-01-02 15:04:05")
 
+	process.UserManager.AddUser(&user)
+	room.onlineUserModel.AddItem(&user)
+	room.onlineUserModel.PublishRowsReset()
 	AddInfo(room.chatBox, timeS, info)
 
 	fmt.Println(response.Infos[0])
@@ -351,7 +361,6 @@ func getOnlineUsersTrigger(msgType message.MsgType, res *message.Response) (err 
 
 	switch msgType {
 	case message.CodeOnlineUsers:
-
 		for i, _ := range res.Infos {
 			process.UserManager.AddUser(&res.Infos[i])
 			room.onlineUserModel.AddItem(&res.Infos[i])

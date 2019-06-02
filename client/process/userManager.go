@@ -17,6 +17,10 @@ func init() {
 	}
 }
 
+func (this *userManager) Clear() {
+	this.onlineUserList = make(map[uint32]*message.UserInfo)
+}
+
 // 添加用户到在线用户列表
 func (this *userManager) AddUser(user *message.UserInfo) {
 	this.onlineUserList[user.UserId] = user

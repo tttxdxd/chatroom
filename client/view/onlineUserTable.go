@@ -41,3 +41,14 @@ func (m *infoTableModel) RowCount() int {
 func (m *infoTableModel) AddItem(item *message.UserInfo) {
 	m.items = append(m.items, item)
 }
+
+func (m *infoTableModel)RemoveItem(userId uint32){
+	for i,item:=range m.items{
+		if item.UserId==userId{
+			temp:=m.items[i+1:]
+			m.items=m.items[:i]
+			m.items=append(m.items,temp...)
+			break
+		}
+	}
+}

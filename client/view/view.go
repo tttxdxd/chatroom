@@ -208,7 +208,8 @@ func WindowShow() {
 	}).Create(); err != nil {
 
 	}
-	mw.selectRegisterBtn.SetEnabled(false)
+	mw.selectLoginBtn.SetEnabled(false)
+	mw.selectRegisterBtn.SetEnabled(true)
 
 	if Connected=="未连接"{
 		mw.loginBox.SetEnabled(false)
@@ -220,6 +221,10 @@ func WindowShow() {
 
 	mw.Run()
 
+}
+
+func CloseView(){
+	_=mw.Close()
 }
 
 func checkInputUserID(input string) (id uint32, ok bool) {
